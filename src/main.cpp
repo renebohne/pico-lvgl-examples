@@ -9,8 +9,18 @@
 #include <Adafruit_LvGL_Glue.h> // Always include this BEFORE lvgl.h!
 #include <lvgl.h>
 
+#include "gui.h"
+
 Adafruit_ST7789 tft = Adafruit_ST7789(&SPI1, TFT_CS, TFT_DC, TFT_RST);
 Adafruit_LvGL_Glue glue;
+
+int current_speed = 0;
+int last_speed = 1;
+int current_battery_mv = 4200;
+bool bluetooth_is_on = false;
+bool gps_is_on = false;
+
+static char msg[80];
 
 void setupSPI()
 {
@@ -23,10 +33,7 @@ void setupSPI()
 
 void lvgl_setup(void)
 {
-    // Create simple label centered on screen
-    lv_obj_t *label = lv_label_create(lv_scr_act());
-    lv_label_set_text(label, "digitale-dinge.de");
-    lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
+    setupGui();
 }
 
 void setup(void)
@@ -71,74 +78,80 @@ void setup(void)
 
 void loop()
 {
-    if (digitalRead(PIN_STICK_DOWN) == LOW)
+    if(digitalRead(PIN_STICK_DOWN) == LOW)
     {
         Serial.println("DOWN");
 
-        while (digitalRead(PIN_STICK_DOWN) == LOW)
+        current_battery_mv -= 200;
+        if(current_battery_mv < 2800)
+        {
+            current_battery_mv = 2800;
+        }
+        updateBatteryLevel(current_battery_mv);
+        
+        while(digitalRead(PIN_STICK_DOWN) == LOW)
         {
             delay(50);
-        }
+        }    
     }
-    else if (digitalRead(PIN_STICK_UP) == LOW)
+    else if(digitalRead(PIN_STICK_UP) == LOW)
     {
         Serial.println("UP");
 
-        while (digitalRead(PIN_STICK_UP) == LOW)
+
+        current_battery_mv += 200;
+        if(current_battery_mv > 4200)
+        {
+            current_battery_mv = 4200;
+        }
+        updateBatteryLevel(current_battery_mv);
+
+        while(digitalRead(PIN_STICK_UP) == LOW)
         {
             delay(50);
-        }
+        }    
     }
-    else if (digitalRead(PIN_STICK_LEFT) == LOW)
+    else if(digitalRead(PIN_STICK_LEFT) == LOW)
     {
+        
         Serial.println("LEFT");
 
-        while (digitalRead(PIN_STICK_LEFT) == LOW)
+        gps_is_on = !gps_is_on;
+        setGPSIcon(gps_is_on);
+        
+        while(digitalRead(PIN_STICK_LEFT) == LOW)
         {
             delay(50);
         }
+        
     }
-    else if (digitalRead(PIN_STICK_RIGHT) == LOW)
+    else if(digitalRead(PIN_STICK_RIGHT) == LOW)
     {
         Serial.println("RIGHT");
 
-        while (digitalRead(PIN_STICK_RIGHT) == LOW)
+        
+
+    
+        while(digitalRead(PIN_STICK_RIGHT) == LOW)
         {
             delay(50);
         }
     }
-    else if (digitalRead(PIN_STICK_PRESS) == LOW)
+    else if(digitalRead(PIN_STICK_PRESS)==LOW)
     {
         Serial.println("PRESS");
-        while (digitalRead(PIN_STICK_PRESS) == LOW)
+
+        bluetooth_is_on = !bluetooth_is_on;
+        setBluetoothIcon(bluetooth_is_on);
+        
+        while(digitalRead(PIN_STICK_PRESS) == LOW)
         {
             delay(50);
         }
     }
 
-    if (digitalRead(PIN_BUTTON_A) == LOW)
-    {
-        Serial.println("A");
-
-        while (digitalRead(PIN_BUTTON_A) == LOW)
-        {
-            lv_task_handler(); // Call LittleVGL task handler periodically
-            lv_tick_inc(10);
-            delay(50);
-        }
-    }
-    if (digitalRead(PIN_BUTTON_B) == LOW)
-    {
-        Serial.println("B");
-
-        while (digitalRead(PIN_BUTTON_B) == LOW)
-        {
-            lv_task_handler(); // Call LittleVGL task handler periodically
-            lv_tick_inc(10);
-            delay(50);
-        }
-    }
 
     lv_task_handler(); // Call LittleVGL task handler periodically
+    
     lv_tick_inc(1);
 }
