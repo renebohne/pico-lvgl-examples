@@ -20,13 +20,13 @@ void setupSPI()
     SPI1.begin();
 }
 
-
 void lvgl_setup(void)
 {
-    // Create simple label centered on screen
-    lv_obj_t *label = lv_label_create(lv_scr_act());
-    lv_label_set_text(label, "digitale-dinge.de");
-    lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_t *img = lv_img_create(lv_scr_act());
+    LV_IMG_DECLARE(digitale_dinge_logo_kreis);
+    lv_img_set_src(img, &digitale_dinge_logo_kreis);
+    // lv_obj_align(img, LV_ALIGN_LEFT_MID, 5, 0);
+    lv_obj_align(img, LV_ALIGN_CENTER, 0, 0);
 }
 
 void setup(void)
