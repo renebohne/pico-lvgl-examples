@@ -20,13 +20,48 @@ void setupSPI()
     SPI1.begin();
 }
 
+lv_obj_t *tab1;
+lv_obj_t *tab2;
+lv_obj_t *tab3;
+lv_obj_t *tabview;
+int currentTab = 2;
 
 void lvgl_setup(void)
 {
-    // Create simple label centered on screen
-    lv_obj_t *label = lv_label_create(lv_scr_act());
-    lv_label_set_text(label, "digitale-dinge.de");
-    lv_obj_align(label, LV_ALIGN_CENTER, 0, 0);
+    /*Create a Tab view object*/
+
+    tabview = lv_tabview_create(lv_scr_act(), LV_DIR_TOP, 50);
+
+    /*Add 3 tabs (the tabs are page (lv_page) and can be scrolled*/
+    tab1 = lv_tabview_add_tab(tabview, "Tab 1");
+    tab2 = lv_tabview_add_tab(tabview, "Tab 2");
+    tab3 = lv_tabview_add_tab(tabview, "Tab 3");
+
+    /*Add content to the tabs*/
+    lv_obj_t *label = lv_label_create(tab1);
+    lv_label_set_text(label, "This the first tab\n\n"
+                             "If the content\n"
+                             "of a tab\n"
+                             "becomes too\n"
+                             "longer\n"
+                             "than the\n"
+                             "container\n"
+                             "then it\n"
+                             "automatically\n"
+                             "becomes\n"
+                             "scrollable.\n"
+                             "\n"
+                             "\n"
+                             "\n"
+                             "Can you see it?");
+
+    label = lv_label_create(tab2);
+    lv_label_set_text(label, "Second tab");
+
+    label = lv_label_create(tab3);
+    lv_label_set_text(label, "Third tab");
+
+    lv_obj_scroll_to_view_recursive(label, LV_ANIM_ON);
 }
 
 void setup(void)
@@ -74,6 +109,10 @@ void loop()
     if (digitalRead(PIN_STICK_DOWN) == LOW)
     {
         Serial.println("DOWN");
+        if (currentTab == 0)
+        {
+            lv_obj_scroll_by_bounded(tab1, 0, -20, LV_ANIM_ON);
+        }
 
         while (digitalRead(PIN_STICK_DOWN) == LOW)
         {
@@ -84,6 +123,11 @@ void loop()
     {
         Serial.println("UP");
 
+        if (currentTab == 0)
+        {
+            lv_obj_scroll_by_bounded(tab1, 0, 20, LV_ANIM_ON);
+        }
+
         while (digitalRead(PIN_STICK_UP) == LOW)
         {
             delay(50);
@@ -92,6 +136,12 @@ void loop()
     else if (digitalRead(PIN_STICK_LEFT) == LOW)
     {
         Serial.println("LEFT");
+        currentTab--;
+        if (currentTab < 1)
+        {
+            currentTab = 0;
+        }
+        lv_tabview_set_act(tabview, currentTab, LV_ANIM_ON);
 
         while (digitalRead(PIN_STICK_LEFT) == LOW)
         {
@@ -101,7 +151,12 @@ void loop()
     else if (digitalRead(PIN_STICK_RIGHT) == LOW)
     {
         Serial.println("RIGHT");
-
+        currentTab++;
+        if (currentTab > 2)
+        {
+            currentTab = 2;
+        }
+        lv_tabview_set_act(tabview, currentTab, LV_ANIM_ON);
         while (digitalRead(PIN_STICK_RIGHT) == LOW)
         {
             delay(50);
@@ -110,35 +165,14 @@ void loop()
     else if (digitalRead(PIN_STICK_PRESS) == LOW)
     {
         Serial.println("PRESS");
+        
         while (digitalRead(PIN_STICK_PRESS) == LOW)
         {
             delay(50);
         }
     }
 
-    if (digitalRead(PIN_BUTTON_A) == LOW)
-    {
-        Serial.println("A");
-
-        while (digitalRead(PIN_BUTTON_A) == LOW)
-        {
-            lv_task_handler(); // Call LittleVGL task handler periodically
-            lv_tick_inc(10);
-            delay(50);
-        }
-    }
-    if (digitalRead(PIN_BUTTON_B) == LOW)
-    {
-        Serial.println("B");
-
-        while (digitalRead(PIN_BUTTON_B) == LOW)
-        {
-            lv_task_handler(); // Call LittleVGL task handler periodically
-            lv_tick_inc(10);
-            delay(50);
-        }
-    }
-
     lv_task_handler(); // Call LittleVGL task handler periodically
+
     lv_tick_inc(1);
 }
